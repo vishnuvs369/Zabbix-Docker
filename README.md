@@ -38,7 +38,7 @@
 =>  check the URL for zabbix
 
 http://yourIP:8090
-Admin / zabbix
+
 
 
 REF:-
