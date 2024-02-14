@@ -1,0 +1,72 @@
+version: '3'
+
+services:
+  mysql-server:
+    image: mysql:8.0
+    container_name: mysql-server
+    environment:
+      MYSQL_DATABASE: "zabbix"
+      MYSQL_USER: "zabbix"
+      MYSQL_PASSWORD: "zabbix_pwd"
+      MYSQL_ROOT_PASSWORD: "root_pwd"
+    networks:
+      - zabbix-net
+    restart: unless-stopped
+    volumes:
+      - /opt/docker_volume/mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8 --collation-server=utf8_bin --default-authentication-plugin=mysql_native_password
+
+  zabbix-java-gateway:
+    image: zabbix/zabbix-java-gateway:alpine-6.0-latest
+    container_name: zabbix-java-gateway
+    networks:
+      - zabbix-net
+    restart: unless-stopped
+
+  zabbix-server-mysql:
+    image: zabbix/zabbix-server-mysql:alpine-6.0-latest
+    container_name: zabbix-server-mysql
+    environment:
+      DB_SERVER_HOST: "mysql-server"
+      MYSQL_DATABASE: "zabbix"
+      MYSQL_USER: "zabbix"
+      MYSQL_PASSWORD: "zabbix_pwd"
+      MYSQL_ROOT_PASSWORD: "root_pwd"
+      ZBX_JAVAGATEWAY: "zabbix-java-gateway"
+      ZBX_CACHESIZE: "128M" 
+      ZBX_VALUECACHESIZE: "128M"  
+      ZBX_VMWARECACHESIZE: "128M"
+      ZBX_STARTPOLLERS: "250"
+      ZBX_STARTPOLLERSUNREACHABLE: "280"
+      ZBX_MAX_CONNECTIONS: "1000" 
+
+
+    networks:
+      - zabbix-net
+    volumes:
+      - /opt/docker_volume/zabbix_data:/usr/share/zabbix
+    ports:
+      - "10051:10051"
+    restart: unless-stopped
+
+  zabbix-web-nginx-mysql:
+    image: zabbix/zabbix-web-nginx-mysql:alpine-6.0-latest
+    container_name: zabbix-web-nginx-mysql
+    environment:
+      ZBX_SERVER_HOST: "zabbix-server-mysql"
+      DB_SERVER_HOST: "mysql-server"
+      MYSQL_DATABASE: "zabbix"
+      MYSQL_USER: "zabbix"
+      MYSQL_PASSWORD: "zabbix_pwd"
+      MYSQL_ROOT_PASSWORD: "root_pwd"
+    networks:
+      - zabbix-net
+    volumes:
+      - /opt/docker_volume/zabbix_web_data:/usr/share/zabbix/web
+    ports:
+      - "8090:8080"
+    restart: unless-stopped
+
+networks:
+  zabbix-net:
+    driver: bridge
