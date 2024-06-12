@@ -62,12 +62,11 @@ services:
   zabbix-agent:
     image: zabbix/zabbix-agent:alpine-6.0-latest
     container_name: zabbix-agent
-    environment:
-      ZBX_SERVER_HOST: "Zabbix-server"
     networks:
       - zabbix-net
     volumes:
       - /home/vishnu/Documents/docker_volume/zabbix_agent_data:/etc/zabbix
+      - /home/vishnu/Documents/docker_volume/zabbix_agent_data/zabbix_agentd.conf:/etc/zabbix/zabbix_agentd.conf:ro  
     ports:
       - "10050:10050"
     restart: unless-stopped
